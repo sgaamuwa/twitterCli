@@ -1,7 +1,6 @@
 package com.gaamuwa.twitter;
 
 import com.gaamuwa.twitter.services.TwitterService;
-import com.kakawait.spring.boot.picocli.autoconfigure.ExitStatus;
 import com.kakawait.spring.boot.picocli.autoconfigure.HelpAwarePicocliCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
