@@ -25,9 +25,13 @@ public interface TwitterService {
      */
     void sendDirectMessage(String twitterHandle, String message);
 
+    void viewDirectMessages();
+
     /**
      * Gets the user's home timeline
      */
     void getDefaultTimeline();
+
+    void getUserTimeline(String screenname);
 
 }

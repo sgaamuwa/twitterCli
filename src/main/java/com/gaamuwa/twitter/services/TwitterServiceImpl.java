@@ -43,8 +43,22 @@ public class TwitterServiceImpl implements TwitterService {
     public void sendDirectMessage(String twitterHandle, String message) {
         try{
             DirectMessage directMessage = twitter.sendDirectMessage(twitterHandle, message);
+            System.out.println(String.format("Message: %s \n Sent to: %s", directMessage.getText(), directMessage.getRecipientScreenName()));
         }catch (TwitterException exception){
             System.out.println("Failure sending direct message to: " + twitterHandle );
+            System.out.println("Error message: "+ exception.getMessage());
+        }
+    }
+
+    @Override
+    public void viewDirectMessages() {
+        try{
+            List<DirectMessage> directMessages = twitter.getDirectMessages();
+            for(DirectMessage directMessage: directMessages){
+                System.out.println(String.format("Message: %s \n Sent By: %s", directMessage.getText(), directMessage.getSenderScreenName()));
+            }
+        }catch (TwitterException exception){
+            System.out.println("Failure receiving DirectMessages");
             System.out.println("Error message: "+ exception.getMessage());
         }
     }
@@ -54,9 +68,7 @@ public class TwitterServiceImpl implements TwitterService {
         try{
             List<Status> statuses = twitter.getHomeTimeline();
             for (Status status : statuses){
-                System.out.println(status.getText());
-                System.out.println("By: @"+status.getUser().getScreenName());
-                System.out.println();
+                System.out.println(String.format("%s \nBy: @%s \n\n", status.getText(), status.getUser().getScreenName()));
                 System.out.println("---------------------------------------------------");
             }
         }catch (TwitterException exception){
@@ -64,5 +76,16 @@ public class TwitterServiceImpl implements TwitterService {
         }
     }
 
-
+    @Override
+    public void getUserTimeline(String screenName) {
+        try{
+            List<Status> statuses = twitter.getUserTimeline(screenName);
+            for (Status status : statuses){
+                System.out.println(String.format("%s \nBy: @%s \n\n", status.getText(), status.getUser().getScreenName()));
+                System.out.println("---------------------------------------------------");
+            }
+        }catch (TwitterException exception){
+            System.out.println("Failure getting timeline: " + exception.getMessage());
+        }
+    }
 }
