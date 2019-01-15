@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Command;
+import twitter4j.Status;
+
+import java.util.List;
 
 @Component
 public class TwitterCommands {
@@ -22,19 +25,16 @@ public class TwitterCommands {
         @Option(
                 names = {"-n", "--new"}
         )
-        boolean newStatus;
-
-        // status provided by the user for the new status
-        @Parameters(paramLabel = "STATUS", description = "status")
         String status;
+
 
         @Override
         public void run(){
             // user should have specified that it is a new status and it shouldn't be empty
-            if(!status.trim().isEmpty() && newStatus){
-                twitterService.sendTweet(status);
-                System.out.println(status);
-            }
+            Status returnedStatus = twitterService.sendTweet(status);
+            System.out.print("-----------------------------------------------------------------------------------");
+            System.out.printf("Status sent: %s\nTime: %s", returnedStatus.getText(), returnedStatus.getCreatedAt());
+            System.out.print("-----------------------------------------------------------------------------------");
         }
     }
 
@@ -45,18 +45,32 @@ public class TwitterCommands {
         @Option(names = {"-u", "--user"})
         boolean user;
 
-        @Parameters(paramLabel = "SCREENNAME", description = "screenname for the person whose timeline were are retrieving", defaultValue = "user")
-        String screenName;
+        @Option(names = {"-s", "--screenname"})
+        String handle;
 
         @Override
         public void run(){
-            if(user && !screenName.trim().isEmpty()){
-                twitterService.getUserTimeline(screenName);
+            // in a case where we have a user specified and a handle is not provided
+            List<Status> statuses = null;
+            if(user && handle == null){
+                statuses = twitterService.getUserTimeline("");
             }
-            // if the user option is not provided then get the default timeline
+            // case where you have user specified and the handle is given
+            else if(user && handle != null){
+                statuses = twitterService.getUserTimeline(handle);
+            }
+            // if the user option is not used
             else if(!user){
-                twitterService.getDefaultTimeline();
+                statuses = twitterService.getDefaultTimeline();
             }
+
+            for(Status status : statuses){
+                System.out.print("-----------------------------------------------------------------------------------\n");
+                System.out.printf("Tweet: %s\nOwner: %s\nCreated At: %s\n Retweets: %d Favourites: %d\n",
+                        status.getText(), status.getUser().getScreenName(), status.getCreatedAt(), status.getRetweetCount(), status.getFavoriteCount() );
+                System.out.print("-----------------------------------------------------------------------------------\n");
+            }
+
         }
     }
 

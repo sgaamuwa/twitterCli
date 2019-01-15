@@ -1,10 +1,12 @@
 package com.gaamuwa.twitter.services;
 
+import com.gaamuwa.twitter.exceptions.InvalidInputException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import twitter4j.*;
 
-import java.nio.file.Path;
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.List;
 
 
@@ -15,28 +17,39 @@ public class TwitterServiceImpl implements TwitterService {
     private Twitter twitter;
 
     @Override
-    public void sendTweet(String status){
-        try{
-            Status returnedStatus  = twitter.updateStatus(status);
-            System.out.println("Status updated: " + returnedStatus.getText());
-            System.out.println("♥ : " + returnedStatus.getFavoriteCount());
+    public Status sendTweet(String status){
+        Status returnedStatus = null;
+        // check that spaces are not passed in
+        if(!status.trim().isEmpty()){
+            try{
+                returnedStatus  = twitter.updateStatus(status);
+            }
+            catch (TwitterException exception){
+                // we need to get the status code and throw an exception to be handled with a better message
+                exception.getStatusCode();
+            }
+        }else{
+            throw new InvalidInputException("The status cannot be empty");
         }
-        catch (TwitterException exception){
-            System.out.println("There was a twitter exception");
-            System.out.println(exception.getErrorMessage());
-        }
+       return returnedStatus;
     }
 
     @Override
-    public void sendTweet(String status, Path mediaPath){
+    public Status sendTweet(String status, String mediaPath){
+        Status returnedStatus = null;
         StatusUpdate statusUpdate = new StatusUpdate(status);
-        try{
-            statusUpdate.setMedia(mediaPath.toFile());
-            Status returnedStatus = twitter.updateStatus(statusUpdate);
-            System.out.println("Status Updated: "+ returnedStatus.getText());
-        }catch (TwitterException exception){
-            System.out.println("There was a twitter exception");
+        File mediaFile = Paths.get(mediaPath).toFile();
+        // if the file does not exist then throw a tantrum
+        if(!mediaFile.exists()){
+            throw new InvalidInputException("The file specified does not exist");
         }
+        try{
+            statusUpdate.setMedia(mediaFile);
+            returnedStatus = twitter.updateStatus(statusUpdate);
+        }catch (TwitterException exception){
+            exception.getStatusCode();
+        }
+        return returnedStatus;
     }
 
     @Override
@@ -64,28 +77,34 @@ public class TwitterServiceImpl implements TwitterService {
     }
 
     @Override
-    public void getDefaultTimeline() {
+    public List<Status> getDefaultTimeline() {
+        List<Status> statuses = null;
         try{
-            List<Status> statuses = twitter.getHomeTimeline();
-            for (Status status : statuses){
-                System.out.println(String.format("%s \nBy: @%s \n\n", status.getText(), status.getUser().getScreenName()));
-                System.out.println("---------------------------------------------------");
-            }
+            statuses = twitter.getHomeTimeline();
         }catch (TwitterException exception){
-            System.out.println("Failure getting timeline: " + exception.getMessage());
+            // this will also have to be subbed out
+            throw new InvalidInputException("we received an exception when getting this");
+        }finally {
+            if(statuses == null){
+                // make sure to swap this out with a more representative exception
+                throw new InvalidInputException("We have null statuses");
+            }
         }
+        return statuses;
     }
 
     @Override
-    public void getUserTimeline(String screenName) {
+    public List<Status> getUserTimeline(String screenName) {
+        List<Status> statuses = null;
         try{
-            List<Status> statuses = twitter.getUserTimeline(screenName);
-            for (Status status : statuses){
-                System.out.println(String.format("%s \nBy: @%s \n\n", status.getText(), status.getUser().getScreenName()));
-                System.out.println("---------------------------------------------------");
-            }
+            statuses = twitter.getUserTimeline(screenName);
         }catch (TwitterException exception){
             System.out.println("Failure getting timeline: " + exception.getMessage());
+        }finally {
+            if(statuses == null){
+                throw new InvalidInputException("failed to retrieve the statuses");
+            }
         }
+        return statuses;
     }
 }

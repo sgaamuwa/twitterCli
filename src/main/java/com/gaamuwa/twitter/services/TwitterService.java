@@ -1,22 +1,23 @@
 package com.gaamuwa.twitter.services;
 
-import twitter4j.TwitterException;
+import twitter4j.Status;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public interface TwitterService {
     /**
      * Send a tweet with only a status
      * @param status
      */
-    void sendTweet(String status);
+    Status sendTweet(String status);
 
     /**
      * Send a tweet with a media file as well
      * @param status
      * @param mediaPath
      */
-    void sendTweet(String status, Path mediaPath);
+    Status sendTweet(String status, String mediaPath);
 
     /**
      * Send a direct message to someone with the twitter handle
@@ -30,8 +31,8 @@ public interface TwitterService {
     /**
      * Gets the user's home timeline
      */
-    void getDefaultTimeline();
+    List<Status> getDefaultTimeline();
 
-    void getUserTimeline(String screenname);
+    List<Status> getUserTimeline(String screenname);
 
 }
